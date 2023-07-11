@@ -75,6 +75,18 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 	}
 
 	a.dialer = &net.Dialer{
+        Control: func(network, address string, conn syscall.RawConn) error {
+            var operr error
+            if err := conn.Control(func(fd uintptr) {
+                operr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+				if operr == nil {
+					operr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEPORT, 1)
+				}
+            }); err != nil {
+                return err
+            }
+            return operr
+        },
 		LocalAddr: &net.TCPAddr{IP: DefaultLocalAddr.IP, Zone: DefaultLocalAddr.Zone},
 		KeepAlive: 30 * time.Second,
 	}
