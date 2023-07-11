@@ -13,8 +13,10 @@ import (
 	"strconv"
 	"sync"
 	"time"
+	"syscall"
 
 	"golang.org/x/net/http2"
+	"golang.org/x/sys/unix"
 )
 
 // Attacker is an attack executor which wraps an http.Client
@@ -30,6 +32,8 @@ type Attacker struct {
 	seq        uint64
 	began      time.Time
 	chunked    bool
+	reuseaddr  bool
+	reuseport  bool
 }
 
 const (
@@ -77,6 +81,23 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 	a.dialer = &net.Dialer{
 		LocalAddr: &net.TCPAddr{IP: DefaultLocalAddr.IP, Zone: DefaultLocalAddr.Zone},
 		KeepAlive: 30 * time.Second,
+	}
+
+	if a.reuseaddr || a.reuseport {
+		a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
+			var syserr error
+			if err := conn.Control(func(fd uintptr) {
+				if a.reuseaddr {
+					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+				}
+				if syserr == nil && a.reuseport {
+					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEPORT, 1)
+				}
+			}); err != nil {
+				return err
+			}
+			return syserr
+		}
 	}
 
 	a.client = http.Client{
@@ -132,6 +153,18 @@ func MaxConnections(n int) func(*Attacker) {
 // body of each request with the chunked transfer encoding.
 func ChunkedBody(b bool) func(*Attacker) {
 	return func(a *Attacker) { a.chunked = b }
+}
+
+// Reuseaddr returns a functional option which makes the attacker set the
+// SO_REUSEADDR option on the socket before binding it.
+func ChunkedBody(b bool) func(*Attacker) {
+	return func(a *Attacker) { a.reuseaddr = b }
+}
+
+// Reuseport returns a functional option which makes the attacker set the
+// SO_REUSEPORT option on the socket before binding it.
+func ChunkedBody(b bool) func(*Attacker) {
+	return func(a *Attacker) { a.reuseport = b }
 }
 
 // Redirects returns a functional option which sets the maximum
