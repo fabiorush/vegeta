@@ -157,13 +157,13 @@ func ChunkedBody(b bool) func(*Attacker) {
 
 // Reuseaddr returns a functional option which makes the attacker set the
 // SO_REUSEADDR option on the socket before binding it.
-func ChunkedBody(b bool) func(*Attacker) {
+func Reuseaddr(b bool) func(*Attacker) {
 	return func(a *Attacker) { a.reuseaddr = b }
 }
 
 // Reuseport returns a functional option which makes the attacker set the
 // SO_REUSEPORT option on the socket before binding it.
-func ChunkedBody(b bool) func(*Attacker) {
+func Reuseport(b bool) func(*Attacker) {
 	return func(a *Attacker) { a.reuseport = b }
 }
 
