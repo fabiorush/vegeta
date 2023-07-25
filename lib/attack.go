@@ -82,7 +82,7 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 		KeepAlive: 30 * time.Second,
 	}
 
-	if a.reuseaddr {
+	// if a.reuseaddr {
 		fmt.Fprintf(os.Stderr, "-FLUS-\n")
 		a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
 			var syserr error
@@ -95,7 +95,7 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 			}
 			return syserr
 		}
-	}
+	// }
 
 	a.client = http.Client{
 		Timeout: DefaultTimeout,
