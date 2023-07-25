@@ -169,10 +169,7 @@ func ChunkedBody(b bool) func(*Attacker) {
 // SO_REUSEADDR option on the socket before binding it.
 func Reuseaddr(b bool) func(*Attacker) {
 	return func(a *Attacker) {
-		// a.reuseaddr = b 
-		// fmt.Fprintf(os.Stderr, "-FLUS- Reuseaddr: %t\n", a.reuseaddr)
 		if b {
-			fmt.Fprintf(os.Stderr, "-FLUS-\n")
 			a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
 				var syserr error
 				if err := conn.Control(func(fd uintptr) {
