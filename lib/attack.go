@@ -155,8 +155,10 @@ func ChunkedBody(b bool) func(*Attacker) {
 // Reuseaddr returns a functional option which makes the attacker set the
 // SO_REUSEADDR option on the socket before binding it.
 func Reuseaddr(b bool) func(*Attacker) {
-	fmt.Fprintf(os.Stderr, "-FLUS- Reuseaddr: %d\n", b)
-	return func(a *Attacker) { a.reuseaddr = b }
+	return func(a *Attacker) {
+		a.reuseaddr = b 
+		fmt.Fprintf(os.Stderr, "-FLUS- Reuseaddr: %t\n", a.reuseaddr)
+	}
 }
 
 // Redirects returns a functional option which sets the maximum
