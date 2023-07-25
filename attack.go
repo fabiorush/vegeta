@@ -56,7 +56,7 @@ func attackCmd() command {
 	fs.Var(&opts.laddr, "laddr", "Local IP address")
 	fs.BoolVar(&opts.keepalive, "keepalive", true, "Use persistent connections")
 	fs.StringVar(&opts.unixSocket, "unix-socket", "", "Connect over a unix socket. This overrides the host address in target URLs")
-	fs.BoolVar(&opts.reuseaddr, "reuseaddr", false, "Set the SO_REUSEADDR socket option")
+	fs.BoolVar(&opts.reuseaddr, "reuseaddr", false, "Set the SO_REUSEADDR socket option (default false)")
 	systemSpecificFlags(fs, opts)
 
 	return command{fs, func(args []string) error {
