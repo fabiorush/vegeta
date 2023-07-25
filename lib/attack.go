@@ -80,34 +80,34 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 	a.dialer = &net.Dialer{
 		LocalAddr: &net.TCPAddr{IP: DefaultLocalAddr.IP, Zone: DefaultLocalAddr.Zone},
 		KeepAlive: 30 * time.Second,
-		Control: func(network, address string, conn syscall.RawConn) error {
-			var syserr error
-			if err := conn.Control(func(fd uintptr) {
-				if a.reuseaddr {
-					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
-				}
-			}); err != nil {
-				return err
-			}
-			addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
-			fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
-			return syserr
-		}
+		// Control: func(network, address string, conn syscall.RawConn) error {
+		// 	var syserr error
+		// 	if err := conn.Control(func(fd uintptr) {
+		// 		if a.reuseaddr {
+		// 			syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+		// 		}
+		// 	}); err != nil {
+		// 		return err
+		// 	}
+		// 	addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
+		// 	fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
+		// 	return syserr
+		// }
 	}
 
 	// if a.reuseaddr {
-		// fmt.Fprintf(os.Stderr, "-FLUS-\n")
-		// a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
-		// 	var syserr error
-		// 	if err := conn.Control(func(fd uintptr) {
-		// 		syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
-		// 		addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
-		// 		fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
-		// 		}); err != nil {
-		// 		return err
-		// 	}
-		// 	return syserr
-		// }
+	// 	fmt.Fprintf(os.Stderr, "-FLUS-\n")
+	// 	a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
+	// 		var syserr error
+	// 		if err := conn.Control(func(fd uintptr) {
+	// 			syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+	// 			addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
+	// 			fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
+	// 			}); err != nil {
+	// 			return err
+	// 		}
+	// 		return syserr
+	// 	}
 	// }
 
 	a.client = http.Client{
@@ -169,8 +169,22 @@ func ChunkedBody(b bool) func(*Attacker) {
 // SO_REUSEADDR option on the socket before binding it.
 func Reuseaddr(b bool) func(*Attacker) {
 	return func(a *Attacker) {
-		a.reuseaddr = b 
-		fmt.Fprintf(os.Stderr, "-FLUS- Reuseaddr: %t\n", a.reuseaddr)
+		// a.reuseaddr = b 
+		// fmt.Fprintf(os.Stderr, "-FLUS- Reuseaddr: %t\n", a.reuseaddr)
+		if b {
+			fmt.Fprintf(os.Stderr, "-FLUS-\n")
+			a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
+				var syserr error
+				if err := conn.Control(func(fd uintptr) {
+					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+					addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
+					fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
+					}); err != nil {
+					return err
+				}
+				return syserr
+			}
+		}
 	}
 }
 
