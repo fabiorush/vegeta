@@ -83,6 +83,7 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 	}
 
 	if a.reuseaddr {
+		fmt.Fprintf(os.Stderr, "-FLUS-\n")
 		a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
 			var syserr error
 			if err := conn.Control(func(fd uintptr) {
