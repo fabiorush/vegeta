@@ -86,11 +86,12 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 				if a.reuseaddr {
 					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
 				}
-				addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
-				fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
 			}); err != nil {
 				return err
 			}
+			addrval, syserr := syscall.GetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR)
+			fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
+			return syserr
 		}
 	}
 
