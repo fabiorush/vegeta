@@ -57,7 +57,6 @@ func attackCmd() command {
 	fs.BoolVar(&opts.keepalive, "keepalive", true, "Use persistent connections")
 	fs.StringVar(&opts.unixSocket, "unix-socket", "", "Connect over a unix socket. This overrides the host address in target URLs")
 	fs.BoolVar(&opts.reuseaddr, "reuseaddr", false, "Set the SO_REUSEADDR socket option")
-	fs.BoolVar(&opts.reuseport, "reuseport", false, "Set the SO_REUSEPORT socket option")
 	systemSpecificFlags(fs, opts)
 
 	return command{fs, func(args []string) error {
@@ -102,7 +101,6 @@ type attackOpts struct {
 	resolvers      csl
 	unixSocket     string
 	reuseaddr      bool
-	reuseport      bool
 }
 
 // attack validates the attack arguments, sets up the
@@ -193,7 +191,6 @@ func attack(opts *attackOpts) (err error) {
 		vegeta.ProxyHeader(proxyHdr),
 		vegeta.ChunkedBody(opts.chunked),
 		vegeta.Reuseaddr(opts.reuseaddr),
-		vegeta.Reuseport(opts.reuseport),
 	)
 
 	res := atk.Attack(tr, opts.rate, opts.duration, opts.name)

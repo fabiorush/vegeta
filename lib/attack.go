@@ -16,7 +16,6 @@ import (
 	"syscall"
 
 	"golang.org/x/net/http2"
-	"golang.org/x/sys/unix"
 )
 
 // Attacker is an attack executor which wraps an http.Client
@@ -33,7 +32,6 @@ type Attacker struct {
 	began      time.Time
 	chunked    bool
 	reuseaddr  bool
-	reuseport  bool
 }
 
 const (
@@ -83,17 +81,14 @@ func NewAttacker(opts ...func(*Attacker)) *Attacker {
 		KeepAlive: 30 * time.Second,
 	}
 
-	if a.reuseaddr || a.reuseport {
+	if a.reuseaddr {
 		a.dialer.Control = func(network, address string, conn syscall.RawConn) error {
 			var syserr error
 			if err := conn.Control(func(fd uintptr) {
-				if a.reuseaddr {
-					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
-				}
-				if syserr == nil && a.reuseport {
-					syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, unix.SO_REUSEPORT, 1)
-				}
-			}); err != nil {
+				syserr = syscall.SetsockoptInt(int(fd), syscall.SOL_SOCKET, syscall.SO_REUSEADDR, 1)
+				addrval, syserr := syscall.GetsockoptInt(int(fd), unix.SOL_SOCKET, unix.SO_REUSEPORT)
+				fmt.Fprintf(os.Stderr, "SOL_SOCKET (%d), SO_REUSEADDR (%d): %d - Err: %s\n", syscall.SOL_SOCKET, syscall.SO_REUSEADDR, addrval, syserr)
+				}); err != nil {
 				return err
 			}
 			return syserr
@@ -159,12 +154,6 @@ func ChunkedBody(b bool) func(*Attacker) {
 // SO_REUSEADDR option on the socket before binding it.
 func Reuseaddr(b bool) func(*Attacker) {
 	return func(a *Attacker) { a.reuseaddr = b }
-}
-
-// Reuseport returns a functional option which makes the attacker set the
-// SO_REUSEPORT option on the socket before binding it.
-func Reuseport(b bool) func(*Attacker) {
-	return func(a *Attacker) { a.reuseport = b }
 }
 
 // Redirects returns a functional option which sets the maximum
