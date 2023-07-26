@@ -63,6 +63,7 @@ func attackCmd() command {
 	fs.Var(&dnsTTLFlag{&opts.dnsTTL}, "dns-ttl", "Cache DNS lookups for the given duration [-1 = disabled, 0 = forever]")
 	fs.BoolVar(&opts.sessionTickets, "session-tickets", false, "Enable TLS session resumption using session tickets")
 	fs.BoolVar(&opts.reuseaddr, "reuseaddr", false, "Set the SO_REUSEADDR socket option (default false)")
+	fs.Uint64Var(&opts.maxRequests, "maxRequests", 0, "Total number of requests (0 = unlimited)")
 	systemSpecificFlags(fs, opts)
 
 	return command{fs, func(args []string) error {
@@ -110,6 +111,7 @@ type attackOpts struct {
 	dnsTTL         time.Duration
 	sessionTickets bool
 	reuseaddr      bool
+	maxRequests    uint64
 }
 
 // attack validates the attack arguments, sets up the
@@ -224,7 +226,7 @@ func attack(opts *attackOpts) (err error) {
 		vegeta.Reuseaddr(opts.reuseaddr),
 	)
 
-	res := atk.Attack(tr, opts.rate, opts.duration, opts.name)
+	res := atk.Attack(tr, opts.rate, opts.duration, opts.maxRequests, opts.name)
 	enc := vegeta.NewEncoder(out)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)

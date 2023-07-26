@@ -406,7 +406,7 @@ type attack struct {
 // the rate specified by the Pacer. When the duration is zero the attack
 // runs until Stop is called. Results are sent to the returned channel as soon
 // as they arrive and will have their Attack field set to the given name.
-func (a *Attacker) Attack(tr Targeter, p Pacer, du time.Duration, name string) <-chan *Result {
+func (a *Attacker) Attack(tr Targeter, p Pacer, du time.Duration, maxRequests uint64, name string) <-chan *Result {
 	var wg sync.WaitGroup
 
 	workers := a.workers
@@ -438,6 +438,10 @@ func (a *Attacker) Attack(tr Targeter, p Pacer, du time.Duration, name string) <
 		for {
 			elapsed := time.Since(atk.began)
 			if du > 0 && elapsed > du {
+				return
+			}
+
+			if maxRequests > 0 && count >= maxRequests {
 				return
 			}
 
